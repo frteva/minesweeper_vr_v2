@@ -1,10 +1,12 @@
 <script setup>
-  import { ref } from 'vue';
+  import { ref, onMounted } from 'vue';
 
   import TheCameraRig from './TheCameraRig.vue';
-  import TheMainRoom from './TheMainRoom.vue';
-  import TheLifeCubeRoom from './TheLifeCubeRoom.vue';
-  import ThePhysicRoom from './ThePhysicRoom.vue';
+  import BaseMine from './BaseMine.vue';
+  import MinesweeperGrid from './MinesweeperGrid.vue';
+  import '../aframe/clickable.js';
+  import '../aframe/pause-sound.js';
+  import '../aframe/toggle-event.js';
 
   import '../aframe/simple-grab.js';
   import '../aframe/outline.js';
@@ -19,7 +21,8 @@
 
 <template>
   <a-scene
-    background="color: black;"
+    fog="type: exponential; color: #000033; density: 0"
+    background="color: #a3d0ed;"
     :webxr="`
       requiredFeatures: local-floor;
       referenceSpaceType: local-floor;
@@ -37,31 +40,26 @@
     simple-grab
   >
 
-    <a-assets @loaded="allAssetsLoaded = true">
-      <!--
-        Title: VR Gallery
-        Model source: https://sketchfab.com/3d-models/vr-gallery-1ac32ed62fdf424498acc146fad31f7e
-        Model author: https://sketchfab.com/mvrc.art (Maxim Mavrichev)
-        Model license: CC BY 4.0 ( https://creativecommons.org/licenses/by/4.0/ )
-      -->
-      <a-asset-item id="room" src="assets/vr_gallery.glb"></a-asset-item>
-      <!--
-        Title: 3D Gallery for VR projects
-        Model source: https://sketchfab.com/3d-models/3d-gallery-for-vr-projects-68f77ed8558c4bd59e0a13e2cc9d1fd1
-        Model author: https://sketchfab.com/tekuto1s (tekuto1s)
-        Model license: CC BY 4.0 ( https://creativecommons.org/licenses/by/4.0/ )
-      -->
-      <a-asset-item id="physic-room" src="assets/3d_gallery_for_vr_projects.glb"></a-asset-item>
-      <a-asset-item id="sound-1" response-type="arraybuffer" src="assets/sound1.mp3" preload="auto"></a-asset-item>
-      <img id="room-physic-out-texture" :src="`assets/main-room-from-physic-room.png`">
-      <img id="room-gol-out-texture" :src="`assets/main-room-from-gol-room.png`">
-      <img id="room-physic-texture" :src="`assets/physicRoom.png`">
-    </a-assets>
+  <a-assets @loaded="allAssetsLoaded = true">
+    <a-asset-item id="crazy-frog" src="./assets/audio/Crazy-Frog-Axel-F.mp3" response-type="arraybuffer" preload="auto"></a-asset-item>
+    <img id="sky" src="/assets/blue-black-sky-with-stars.jpg">
+  </a-assets>
 
     <template v-if="allAssetsLoaded">
-      <TheMainRoom :scale="scale" />
-      <TheLifeCubeRoom />
-      <ThePhysicRoom />
+      <a-sky src="#sky"></a-sky>
+      <a-entity light="type: point; intensity: 2000" position="0 1000 0"></a-entity>
+      <a-box
+        color="red"
+        position="7 1 7"
+        scale="0.5 0.5 0.5"
+        sound="src: #crazy-frog; on: click1"
+        toggle-event
+        pause-sound="event: click2"
+        clickable
+      ></a-box>
+
+      <MinesweeperGrid />
+
     </template>
 
     <TheCameraRig />
