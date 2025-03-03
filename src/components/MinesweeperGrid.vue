@@ -1,11 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import BaseMine from './BaseMine.vue';
 import { initGrid, flowFieldTo } from '@/utils/minesweeper.js';
+import { correctlyMarkedMines } from '@/store/pad.js';
 
-const rows = 20;
-const cols = 30;
-const mineCount = 100;
+const rows = 10;
+const cols = 10;
+const mineCount = 15;
 const gap = 0.1;
 const width = 1;
 const depth = 1;
@@ -25,6 +26,13 @@ function revealed_propagation(x, y) {
     }
   }
 }
+
+// 🎨 Déterminer dynamiquement si on gagne!
+watch(correctlyMarkedMines, (newValue) => {
+    if (newValue === mineCount) {
+      console.log("🎉 Victoire ! Toutes les mines ont été trouvées !");
+    }
+  });
 
 </script>
 

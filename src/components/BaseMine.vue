@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import '../aframe/clickable.js';
 import '../aframe/event-set.js';
 import '../aframe/look-at.js';
 import '../aframe/outline.js';
+import { markdownPressed, correctlyMarkedMines } from '../store/pad.js';
 
 const props = defineProps({
   position: String,
@@ -17,12 +18,23 @@ const props = defineProps({
 const emits = defineEmits(['revealed-propagation']);
 const clicked = ref(false);
 const markedAsMine = ref(false); // 🚩 Marquer une case comme suspectée
+const correctlyMarkedMine = ref(false);
+let unwatch = null;
+
+watch(correctlyMarkedMine, (newValue) => {
+  console.log(`🔍 correctlyMarkedMine changé : ${newValue}`);
+  if (newValue) {
+    correctlyMarkedMines.value++;
+  } else {
+    correctlyMarkedMines.value--;
+  }
+});
 
 // 🎨 Déterminer dynamiquement la couleur
 const boxColor = computed(() => {
   if (markedAsMine.value) return 'purple'; // 🟣 Case marquée comme mine
   if (props.isMine && clicked.value) return 'red'; // 🔴 Devient rouge après un clic
-  if (props.showHint) return 'green'; // ✅ Devient vert si `showHint === true`
+  if (props.showHint && props.adjacentMines > 0) return 'green'; // ✅ Devient vert
   return 'blue'; // 🔵 Sinon, reste bleu
 });
 
@@ -31,23 +43,26 @@ const hoverSoundId = computed(() => {
   return boxColor.value === 'blue' ? 'sound-hidden' : `sound-${props.adjacentMines}`;
 });
 
-// 🎵 Stopper tous les sons et jouer le bon
 function handleMouseEnter() {
+  // 🎯 Active le `watch` pour détecter la pression sur `abuttondown`
+  unwatch = watch(markdownPressed, (newValue) => {
+    if (!markdownPressed.value) return;
+    handleMarkMine();
+  });
+
   console.log("🔊 BaseMine.vue: Jouer son :", hoverSoundId.value);
 
-  // Récupérer le conteneur des sons
   const soundContainer = document.querySelector("#sound-container");
   if (!soundContainer) {
     console.error("❌ BaseMine.vue: sound-container non trouvé !");
     return;
   }
 
-  // Stopper tous les sons
+  // Stopper tous les sons et jouer le bon
   soundContainer.querySelectorAll("a-entity[sound]").forEach(entity => {
     if (entity.components.sound) entity.components.sound.stopSound();
   });
 
-  // Jouer uniquement le bon son
   const soundEntity = document.querySelector(`#sound-container #${hoverSoundId.value}`);
   if (soundEntity && soundEntity.components.sound) {
     soundEntity.components.sound.playSound();
@@ -59,6 +74,10 @@ function handleMouseEnter() {
 
 // 🎵 Arrêter tous les sons au `mouseleave`
 function handleMouseLeave() {
+  if (unwatch) {
+    unwatch();
+  }
+
   console.log("⏹ BaseMine.vue: Stopper tous les sons");
 
   const soundContainer = document.querySelector("#sound-container");
@@ -69,36 +88,40 @@ function handleMouseLeave() {
   });
 }
 
-
-function handleClick() {
-  if (!props.isMine) {
-    emits("revealed-propagation");
-  } else {
-    console.log("💥 BOOM! C'était une mine !");
-    clicked.value = true;
-  }
-}
-
-// 🚩 Fonction pour marquer une case comme suspectée
+// 🚩 Marquer une case comme suspectée
 function handleMarkMine() {
-  if (!clicked.value) {
-    markedAsMine.value = !markedAsMine.value; // Alternance bleu/violet
-    console.log(`🚩 Case ${props.position} marquée comme mine : ${markedAsMine.value}`);
+  if (clicked.value) return;
+  markedAsMine.value = !markedAsMine.value;
+  console.log(`🚩 Case ${props.position} marquée comme mine : ${markedAsMine.value}`);
+  if(markedAsMine.value && props.isMine) {
+    correctlyMarkedMine.value = true;
+  } else {
+    correctlyMarkedMine.value = false;
   }
 }
 
-// 🕹 Ajouter l'écouteur de `abuttondown`
-onMounted(() => {
-  const entity = document.querySelector(`[position='${props.position}']`);
-  if (!entity) return;
+// 🎯 Révéler la case (si elle était marquée violette, appliquer la révélation)
+function handleClick() {
+  if (markedAsMine.value) {
+    markedAsMine.value = false; // Retirer le marquage
 
-  entity.addEventListener("abuttondown", handleMarkMine); // VR
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "m") handleMarkMine(); // Alternative PC : touche "M"
-  });
-});
-
-
+    if (props.isMine) {
+      clicked.value = true; // 🚨 Devient rouge car c'est une mine
+    } else if (props.showHint && props.adjacentMines > 0) {
+      // ✅ Devient vert s'il y a des mines adjacentes
+    } else {
+      // 🔵 Devient invisible si `adjacentMines === 0`
+      emits("revealed-propagation");
+    }
+  } else {
+    if (!props.isMine) {
+      emits("revealed-propagation");
+    } else {
+      console.log("💥 BOOM! C'était une mine !");
+      clicked.value = true;
+    }
+  }
+}
 </script>
 
 <template>
@@ -109,18 +132,17 @@ onMounted(() => {
     @mouseleave="handleMouseLeave"
     outline-on-event
     :position="position"
-    :material="`color: ${boxColor}; opacity: ${showHint && adjacentMines == 0 && !isMine ? 0 : 1}`"
+    :material="`color: ${boxColor}; opacity: ${(showHint && adjacentMines == 0 && !isMine) ? 0 : 1}`"
     :depth="depth"
     :width="width"
     height="0.2"
   >
-
-  <!-- Afficher le nombre si révélé et non mine -->
+    <!-- Afficher le nombre si révélé et non mine -->
     <a-text v-if="showHint && !isMine"
-            :value="adjacentMines"
-            position="0 0.5 0"
-            look-at
-          >
+      :value="adjacentMines"
+      position="0 0.5 0"
+      look-at
+    >
     </a-text>
   </a-box>
 </template>

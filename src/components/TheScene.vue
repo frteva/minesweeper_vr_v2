@@ -68,13 +68,21 @@
     <audio id="hover-sound-8" src="./assets/audio/hover_sound_8.mp3" preload="auto"></audio>
 
     <!-- Préchargement de l'image -->
-    <img id="sky" src="/assets/blue-black-sky-with-stars.jpg">
+    <!-- <img id="sky" src="/assets/blue-black-sky-with-stars.jpg"> -->
+    <a-asset-item id="field" src="./assets/field_and_garden.glb"></a-asset-item>
   </a-assets>
 
     <template v-if="allAssetsLoaded">
       <a-sky src="#sky"></a-sky>
       <a-entity light="type: point; intensity: 2000" position="0 1000 0"></a-entity>
-      <a-box
+
+      <a-entity 
+        gltf-model="#field"
+        position="0 3.8 0" 
+        scale="1 1 1"
+      ></a-entity>
+      
+      <!-- <a-box
         color="red"
         position="7 1 7"
         scale="0.5 0.5 0.5"
@@ -82,7 +90,7 @@
         toggle-event
         pause-sound="event: click2"
         clickable
-      ></a-box>
+      ></a-box> -->
 
       <a-entity id="sound-container" position="0 0 0">
         <a-entity id="sound-hidden" sound="src: #hover-sound-hidden; positional: false; volume: 1"></a-entity>
