@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import BaseMine from './BaseMine.vue';
 import { initGrid, flowFieldTo } from '@/utils/minesweeper.js';
-import { correctlyMarkedMines } from '@/store/pad.js';
+import { correctlyMarkedMines, isWin } from '@/store/pad.js';
 
 const rows = 10;
 const cols = 10;
@@ -31,6 +31,7 @@ function revealed_propagation(x, y) {
 watch(correctlyMarkedMines, (newValue) => {
     if (newValue === mineCount) {
       console.log("🎉 Victoire ! Toutes les mines ont été trouvées !");
+      isWin.value = true;
     }
   });
 

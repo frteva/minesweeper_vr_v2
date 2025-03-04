@@ -158,11 +158,11 @@ function handleClick() {
   >
 
   <a-entity v-if="isMine && clicked"
-        gltf-model="#explosion"
-        position="0 0 0" 
-        scale="0.5 0.5 0.5"
-        rotation="90 0 0"
-        animation-mixer="clip: *; loop: once; timeScale: 4; clampWhenFinished: true;"
+    gltf-model="#explosion"
+    position="0 0 0" 
+    scale="0.5 0.5 0.5"
+    rotation="90 0 0"
+    animation-mixer="clip: *; loop: once; timeScale: 4; clampWhenFinished: true;"
   ></a-entity>
 
    <!--  <a-text v-if="showHint && !isMine"

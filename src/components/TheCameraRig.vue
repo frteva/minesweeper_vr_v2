@@ -5,8 +5,12 @@ import '../aframe/simple-navmesh-constraint.js';
 import '../aframe/blink-controls.js';
 import '../aframe/physx-grab.js';
 import { onMounted } from 'vue';
-import { markdownPressed, isDead } from '../store/pad.js';
+import { markdownPressed, isDead, isWin } from '../store/pad.js';
 import Keyboard from '../utils/keyboard.js';
+
+const props = defineProps({
+  allAssetsLoaded: Boolean,
+});
 
 onMounted(() => {
 
@@ -63,8 +67,9 @@ onMounted(() => {
       position="0 1.65 0"
     >
       <a-entity light="type: point; intensity: 4" position="0 0 0"></a-entity>
-      <a-plane v-if="isDead" src="#wasted" width="1" height="1" scale="5 5 5" position="0 0 -3" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
-      <a-plane v-if="isDead" src="#die" width="1.920" height="1.080" scale="5 5 5" position="0 0 -3" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
+      <a-plane v-if="isDead" src="#die" width="1.920" height="1.080" scale="5.5 5.5 5.5" position="0 0 -2" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
+      <a-plane v-if="isDead" src="#wasted" width="1" height="1" scale="3.5 3.5 3.5" position="0 0 -2" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
+      <a-plane v-if="isWin" src="#won" width="4.80" height="2.70" scale="2 2 2" position="0 0 -3" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
 
       <a-plane ref="wastedRef"
         src="#wasted"
@@ -130,6 +135,13 @@ onMounted(() => {
       position="0 1.5 0"
       physx-grab
     >
+      <!-- <a-entity 
+        v-if="allAssetsLoaded"
+        gltf-model="#detector"
+        position="0 0 0" 
+        scale="1 1 1"
+        rotation="90 0 0"
+      ></a-entity> -->
       <a-sphere id="hand-right-collider"
         radius="0.02"
         visible="false"

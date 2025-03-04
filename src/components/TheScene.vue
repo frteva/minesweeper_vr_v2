@@ -1,8 +1,9 @@
 <script setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, watch, onMounted } from 'vue';
 
   import TheCameraRig from './TheCameraRig.vue';
   import MinesweeperGrid from './MinesweeperGrid.vue';
+  import { isDead, isWin } from '../store/pad.js';
   import '../aframe/clickable.js';
   import '../aframe/pause-sound.js';
   import '../aframe/toggle-event.js';
@@ -16,6 +17,8 @@
   });
 
   const allAssetsLoaded = ref(false);
+  const grenadeSound = ref(null);
+  const crazyfrogSound = ref(null);
 
   const onAssetsLoaded = () => {
   console.log("✅ Tous les assets sont chargés !");
@@ -30,12 +33,25 @@
   }
 };
 
+watch(isDead, (newVal) => {
+  if (newVal && grenadeSound.value) {
+    console.log("💥 Jouer son de grenade !");
+    grenadeSound.value.components.sound.playSound();
+  }
+});
+
+watch(isWin, (newVal) => {
+  if (newVal && crazyfrogSound.value) {
+    console.log("💥 Jouer son de grenade !");
+    crazyfrogSound.value.components.sound.playSound();
+  }
+});
+
 </script>
 
 <template>
   <a-scene
     stats
-    fog="type: exponential; color: #000033; density: 0"
     background="color: #a3d0ed;"
     :webxr="`
       requiredFeatures: local-floor;
@@ -66,7 +82,8 @@
     <audio id="hover-sound-6" src="./assets/audio/hover_sound_6.mp3" preload="auto"></audio>
     <audio id="hover-sound-7" src="./assets/audio/hover_sound_7.mp3" preload="auto"></audio>
     <audio id="hover-sound-8" src="./assets/audio/hover_sound_8.mp3" preload="auto"></audio>
-    <audio id="birds" src="./assets/audio/birds.wav" preload="auto"></audio>
+    <audio id="birds" src="./assets/audio/birds.mp3" preload="auto"></audio>
+    <audio id="grenade" src="./assets/audio/Grenade.mp3" preload="auto"></audio>
 
 
     <!-- Préchargement de l'image -->
@@ -81,11 +98,12 @@
     <img id="rules" src="/assets/rules.png" preload="auto">
     <img id="wasted" src="/assets/wasted.png" preload="auto">
     <img id="die" src="/assets/die_background.png" preload="auto">
+    <img id="won" src="/assets/you_won.png" preload="auto">
     <a-asset-item id="field" src="./assets/field_and_garden.glb" preload="auto"></a-asset-item>
-    <a-asset-item id="board" src="./assets/notice_board_low-poly.glb" preload="auto"></a-asset-item>
     <a-asset-item id="board2" src="./assets/notice_board.glb" preload="auto"></a-asset-item>
     <a-asset-item id="button" src="./assets/button.glb" preload="auto"></a-asset-item>
     <a-asset-item id="explosion" src="./assets/timeframe_explosion.glb" preload="auto"></a-asset-item>
+    <a-asset-item id="detector" src="./assets/mine_detector.glb" preload="auto"></a-asset-item>
   </a-assets>
 
     <template v-if="allAssetsLoaded">
@@ -120,13 +138,14 @@
       <a-plane src="#cases_rules" width="2.38" height="1.64" scale="0.4 0.4 0.4" position="-1.9 2 0.9" rotation="0 90 0" transparent="true" roughness="2"></a-plane>
       <a-plane src="#rules" width="2.89" height="1.65" scale="0.4 0.4 0.4" position="-1.9 2 2.1" rotation="0 90 0" transparent="true" roughness="2"></a-plane>
 
-
       <a-entity id="birds" sound="src: #birds; positional: false; loop: true; volume: 1; autoplay: true"></a-entity>
+      <a-entity ref="grenadeSound" sound="src: #grenade; positional: false; loop: false; volume: 1"></a-entity>
+      <a-entity ref="crazyfrogSound" sound="src: #crazy-frog; positional: false; loop: false; volume: 1"></a-entity>
 
       <a-entity id="sound-container" position="0 0 0">
         <a-entity id="sound-hidden" sound="src: #hover-sound-hidden; positional: false; volume: 1"></a-entity>
-        <a-entity id="sound-1" sound="src: #hover-sound-1; positional: false; loop: true; volume: 1"></a-entity>
-        <a-entity id="sound-2" sound="src: #hover-sound-2; positional: false; loop: true; volume: 1"></a-entity>
+        <a-entity id="sound-1" sound="src: #hover-sound-1; positional: false; loop: true; volume: 1.5"></a-entity>
+        <a-entity id="sound-2" sound="src: #hover-sound-2; positional: false; loop: true; volume: 1.5"></a-entity>
         <a-entity id="sound-3" sound="src: #hover-sound-3; positional: false; loop: true; volume: 1"></a-entity>
         <a-entity id="sound-4" sound="src: #hover-sound-4; positional: false; loop: true; volume: 1"></a-entity>
         <a-entity id="sound-5" sound="src: #hover-sound-5; positional: false; loop: true; volume: 1"></a-entity>
@@ -139,7 +158,7 @@
 
     </template>
 
-    <TheCameraRig />
+    <TheCameraRig :allAssetsLoaded="allAssetsLoaded"/>
 
   </a-scene>
 </template>
