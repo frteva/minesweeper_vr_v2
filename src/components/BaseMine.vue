@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import '../aframe/clickable.js';
 import '../aframe/event-set.js';
 import '../aframe/look-at.js';
 import '../aframe/outline.js';
-import { markdownPressed, correctlyMarkedMines } from '../store/pad.js';
+import { markdownPressed, correctlyMarkedMines, isDead } from '../store/pad.js';
 
 const props = defineProps({
   position: String,
@@ -19,6 +19,7 @@ const emits = defineEmits(['revealed-propagation']);
 const clicked = ref(false);
 const markedAsMine = ref(false); // 🚩 Marquer une case comme suspectée
 const correctlyMarkedMine = ref(false);
+const planeRef = ref(null);
 let unwatch = null;
 
 watch(correctlyMarkedMine, (newValue) => {
@@ -31,16 +32,32 @@ watch(correctlyMarkedMine, (newValue) => {
 });
 
 // 🎨 Déterminer dynamiquement la couleur
-const boxColor = computed(() => {
-  if (markedAsMine.value) return 'purple'; // 🟣 Case marquée comme mine
-  if (props.isMine && clicked.value) return 'red'; // 🔴 Devient rouge après un clic
-  if (props.showHint && props.adjacentMines > 0) return 'green'; // ✅ Devient vert
-  return 'blue'; // 🔵 Sinon, reste bleu
+const lightTexture = computed(() => {
+  if (markedAsMine.value) return "blue"; // 🟣 Case marquée comme mine
+  if (props.isMine && clicked.value) return "red"; // 🔴 Devient rouge après un clic
+  if (props.showHint && props.adjacentMines > 0) return "green"; // ✅ Devient vert
+  if(props.showHint && props.adjacentMines === 0) return "transparent"; // 🔵 Devient invisible
+  return "purple"; // 🔵 Sinon, reste bleu
 });
+
+// Charger la texture au montage
+onMounted(() => {
+  if (planeRef.value) {
+    planeRef.value.setAttribute("material", `src: #light_${lightTexture.value}; transparent: true; alphaTest: 0.01; opacity: 0.7; side: double`);
+  }
+});
+
+// Mettre à jour la texture dynamiquement
+watch(lightTexture, (newValue) => {
+  if (planeRef.value) {
+    planeRef.value.setAttribute("material", `src: #light_${newValue}; transparent: true; alphaTest: 0.01; opacity: 0.7; side: double`);
+  }
+});
+
 
 // 🎵 Déterminer le bon son en fonction des mines adjacentes
 const hoverSoundId = computed(() => {
-  return boxColor.value === 'blue' ? 'sound-hidden' : `sound-${props.adjacentMines}`;
+  return lightTexture.value === 'purple' ? 'sound-hidden' : `sound-${props.adjacentMines}`;
 });
 
 function handleMouseEnter() {
@@ -119,30 +136,42 @@ function handleClick() {
     } else {
       console.log("💥 BOOM! C'était une mine !");
       clicked.value = true;
+      isDead.value = true; // 🟥 Met la variable `isDead` à `true`
     }
   }
 }
 </script>
 
 <template>
-  <a-box
+
+  <a-plane 
     clickable
     @click="handleClick"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
     outline-on-event
     :position="position"
-    :material="`color: ${boxColor}; opacity: ${(showHint && adjacentMines == 0 && !isMine) ? 0 : 1}`"
+    rotation="-90 0 0" 
     :depth="depth"
     :width="width"
-    height="0.2"
+    ref="planeRef"
   >
-    <!-- Afficher le nombre si révélé et non mine -->
-    <a-text v-if="showHint && !isMine"
-      :value="adjacentMines"
-      position="0 0.5 0"
-      look-at
-    >
-    </a-text>
-  </a-box>
+
+  <a-entity v-if="isMine && clicked"
+        gltf-model="#explosion"
+        position="0 0 0" 
+        scale="0.5 0.5 0.5"
+        rotation="90 0 0"
+        animation-mixer="clip: *; loop: once; timeScale: 4; clampWhenFinished: true;"
+  ></a-entity>
+
+   <!--  <a-text v-if="showHint && !isMine"
+        :value="adjacentMines"
+        position="0 0 0.2"
+        look-at
+      >
+    </a-text> -->
+
+  </a-plane>
+
 </template>

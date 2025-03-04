@@ -5,7 +5,7 @@ import '../aframe/simple-navmesh-constraint.js';
 import '../aframe/blink-controls.js';
 import '../aframe/physx-grab.js';
 import { onMounted } from 'vue';
-import { markdownPressed } from '../store/pad.js';
+import { markdownPressed, isDead } from '../store/pad.js';
 import Keyboard from '../utils/keyboard.js';
 
 onMounted(() => {
@@ -62,6 +62,33 @@ onMounted(() => {
       camera
       position="0 1.65 0"
     >
+      <a-entity light="type: point; intensity: 4" position="0 0 0"></a-entity>
+      <a-plane v-if="isDead" src="#wasted" width="1" height="1" scale="5 5 5" position="0 0 -3" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
+      <a-plane v-if="isDead" src="#die" width="1.920" height="1.080" scale="5 5 5" position="0 0 -3" rotation="0 0 0" transparent="true" roughness="2"></a-plane>
+
+      <a-plane ref="wastedRef"
+        src="#wasted"
+        width="1" height="1"
+        scale="5 5 5"
+        position="0 0 -3"
+        rotation="0 0 0"
+        transparent="true"
+        roughness="2"
+        visible="false"
+      ></a-plane>
+
+      <a-plane ref="dieRef"
+        src="#die"
+        width="1.920" height="1.080"
+        scale="5 5 5"
+        position="0 0 -3"
+        rotation="0 0 0"
+        transparent="true"
+        roughness="2"
+        visible="false"
+      ></a-plane>
+
+    
       <a-entity
         geometry="primitive: circle; radius: 0.0003;"
         material="shader: flat; color: white;"

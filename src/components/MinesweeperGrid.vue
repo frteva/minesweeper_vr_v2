@@ -38,6 +38,7 @@ watch(correctlyMarkedMines, (newValue) => {
 
 <template>
   <a-entity>
+    
     <!-- Solution : Utiliser un <template> pour imbriquer les v-for -->
     <template v-for="(row, x) in grid" :key="x">
       <template v-for="(cell, y) in row" :key="`${x}-${y}`">
