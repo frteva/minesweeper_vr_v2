@@ -33,8 +33,8 @@ watch(correctlyMarkedMine, (newValue) => {
 
 // 🎨 Déterminer dynamiquement la couleur
 const lightTexture = computed(() => {
-  if (markedAsMine.value) return "blue"; // 🟣 Case marquée comme mine
-  if (props.isMine && clicked.value) return "red"; // 🔴 Devient rouge après un clic
+  if (markedAsMine.value) return "red"; // 🟣 Case marquée comme mine
+  if (props.isMine && clicked.value) return "blue"; // 🔴 Devient rouge après un clic
   if (props.showHint && props.adjacentMines > 0) return "green"; // ✅ Devient vert
   if(props.showHint && props.adjacentMines === 0) return "transparent"; // 🔵 Devient invisible
   return "purple"; // 🔵 Sinon, reste bleu
